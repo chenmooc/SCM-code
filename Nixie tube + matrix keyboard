@@ -1,0 +1,79 @@
+#include<reg52.h>
+#define uint unsigned int
+#define uchar unsigned char
+
+#define SEG P1
+#define KEY P2
+sbit wei0=P3^5;
+sbit wei1=P3^6;
+sbit wei2=P3^7;
+
+void delay(int);
+void wei(int);
+uint scanner(void);
+
+uchar code TAB[16]={0xfc,0x60,0xda,0xf2,0x66,0xb6,0xbe,0xe0,0xfe,0xf6,0xef,0x3f,0x1b,0xfd,0x9f,0x8f};
+uchar scan[4]={0xef,0xdf,0xbf,0x7f};
+
+void main(void)
+{
+	
+	uint num[]={5,2,1};
+	while(1)
+	{
+		uint w;
+		scanner();
+		if(scanner!=0)
+		{
+		num[0]=num[1];num[1]=num[2];num[2]=scanner();
+		}
+		for(w=0;w<3;w++)
+		{
+			wei(w);
+			SEG=TAB[num[w]];
+			delay(50);
+		}
+	}
+}
+
+uint scanner(void)
+{
+	uchar col,row=0,rowkey;
+	int kcode;
+	for(col=0;col<4;col++)
+	{
+		KEY=scan[col];
+		rowkey=~KEY&0x0f;
+		if(rowkey!=0)
+		{
+			switch(rowkey)
+			{
+				case 0x01:row=0;break;
+				case 0x02:row=1;break;
+				case 0x04:row=2;break;
+				case 0x08:row=3;break;
+			}
+			kcode=4*col+row;
+			while(rowkey!=0)
+				rowkey=~KEY&0x0f;
+		}
+		delay(1);
+	}
+	return kcode;
+}
+void wei(int b)
+{
+	switch(b)
+	{
+		case 0:wei0=1,wei1=0,wei2=0;break;
+		case 1:wei0=0,wei1=1,wei2=0;break;
+		case 2:wei0=0,wei1=0,wei2=1;break;
+	}
+}
+
+void delay(int a)
+{
+	uint i;
+	while(a--)
+		for(i=10;i>0;i--);
+}
